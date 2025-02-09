@@ -16,3 +16,106 @@
 - Utiliser le repository du github classroom en suivant [ce lien]() pour le binôme
 - Décrire dans ce ReadMe les détails de votre projet et comment vous avez surmonté les difficultés (typiquement concernant certains packages comme Room)
 - Ajouter le lien vers une vidéo (Youtube ou autre) avec une démo de votre projet où l'on voit son déploiement sur differentes plateformes
+
+# Projet PizzaApp - Application Multiplateforme Kotlin
+
+## Description du Projet
+PizzaApp est une application multiplateforme développée en Kotlin utilisant Compose Multiplatform. L'application permet aux utilisateurs de parcourir un menu de pizzas, d'ajouter des pizzas à leur panier, et de visualiser leur commande. L'application est disponible sur les plateformes suivantes :
+
+- **Android**
+- **Desktop (Windows, macOS, Linux)**
+- **Web (via WebAssembly)**
+
+## Technologies Utilisées
+- **Kotlin Multiplatform** : Pour partager le code entre les différentes plateformes.
+- **Compose Multiplatform** : Pour l'interface utilisateur commune sur Android, Desktop et Web.
+- **Skiko** : Pour le rendu graphique sur Web via WebAssembly.
+- **Ktor** : Pour les requêtes réseau (si nécessaire).
+- **Voyager** : Pour la navigation entre les écrans.
+
+## Fonctionnalités
+- **Menu des Pizzas** : Affiche une liste de pizzas avec leurs noms, prix et images.
+- **Détails d'une Pizza** : Permet de voir les détails d'une pizza et d'ajouter des options supplémentaires (ex : fromage supplémentaire).
+- **Panier** : Affiche les pizzas ajoutées au panier et calcule le prix total.
+- **Navigation** : Utilise Voyager pour naviguer entre les écrans.
+
+## Difficultés Rencontrées et Solutions
+
+### 1. Problème d'Affichage des Images sur Web
+**Problème** :
+Les images ne s'affichaient pas sur la version Web de l'application, bien qu'elles fonctionnaient correctement sur Android et Desktop.
+
+**Solution** :
+- **Utilisation de `painterResource`** : Nous avons remplacé `KamelImage` par `Image` avec `painterResource` pour charger les images. Cela a résolu le problème d'affichage sur le Web.
+- **Placement des Images** : Les images ont été placées dans le dossier `commonMain/resources/` pour qu'elles soient accessibles sur toutes les plateformes.
+
+### 2. Problème de Persistance du Panier
+**Problème** :
+Le panier ne conservait pas les articles ajoutés lors de la navigation entre les écrans.
+
+**Solution** :
+- **État Global** : Nous avons créé un objet global `CartState` pour gérer l'état du panier. Cet objet est partagé entre tous les écrans, ce qui permet de conserver les articles ajoutés au panier.
+
+```kotlin
+object CartState {
+    private val _cart = mutableStateListOf<Pizza>()
+    val cart: List<Pizza> get() = _cart
+
+    fun addToCart(pizza: Pizza) {
+        _cart.add(pizza)
+    }
+
+    fun clearCart() {
+        _cart.clear()
+    }
+}
+```
+
+### 3. Problème de Compatibilité WebAssembly (Wasm)
+**Problème** :
+L'application ne fonctionnait pas sur le Web en raison d'une erreur liée à Skiko (`WebAssembly.instantiate(): Import #4681 "./skiko.mjs"`).
+
+**Solution** :
+- **Mise à Jour des Dépendances** : Nous avons mis à jour les dépendances de Skiko et Compose Multiplatform pour utiliser des versions compatibles.
+- **Nettoyage du Projet** : Nous avons exécuté `./gradlew clean` pour supprimer les artefacts de build corrompus.
+- **Configuration Correcte de `wasmJs`** : Nous avons configuré le target `wasmJs` avec les bonnes options pour générer les fichiers WebAssembly et JavaScript nécessaires.
+
+```kotlin
+wasmJs {
+    moduleName = "composeApp"
+    browser {
+        commonWebpackConfig {
+            outputFileName = "composeApp.js"
+        }
+    }
+    binaries.executable()
+}
+```
+
+### 4. Problème de Version Minimale du SDK Android
+**Problème** :
+Une dépendance (`androidx.wear.compose:compose-material-core`) nécessitait une version minimale du SDK Android (`minSdkVersion`) de 25, alors que notre projet était configuré pour une version 24.
+
+**Solution** :
+- **Mise à Jour de `minSdkVersion`** : Nous avons mis à jour la version minimale du SDK Android à 25 dans le fichier `build.gradle.kts`.
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 25
+    }
+}
+```
+
+### 5. Problème de Conflit de Namespace
+**Problème** :
+Deux bibliothèques (`kamel-image-android` et `kamel-fetcher-resources-android`) utilisaient le même namespace (`io.kamel.image`), ce qui causait un conflit.
+
+**Solution** :
+- **Exclusion de la Bibliothèque Conflictuelle** : Nous avons exclu la bibliothèque conflictuelle dans les dépendances.
+
+```kotlin
+implementation("media.kamel:kamel-image:1.0.3") {
+    exclude(group = "media.kamel", module = "kamel-fetcher-resources-android")
+}
+```
