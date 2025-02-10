@@ -14,10 +14,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import fr.unice.miage.tp3.pizzap.model.Pizza
 import org.jetbrains.compose.resources.painterResource
+import pizzapp.composeapp.generated.resources.Res
+import pizzapp.composeapp.generated.resources.*
 
 
 @Composable
 fun PizzaCard(pizza: Pizza, modifier: Modifier = Modifier, onClickPizza: () -> Unit, onAddToCart: () -> Unit) {
+    val imageRes = when (pizza.imagePath) {
+        "pizza1" -> Res.drawable.pizza1
+        "pizza2" -> Res.drawable.pizza2
+        "pizza3" -> Res.drawable.pizza3
+        "pizza4" -> Res.drawable.pizza4
+        "pizza5" -> Res.drawable.pizza5
+        "pizza6" -> Res.drawable.pizza6
+        "pizza7" -> Res.drawable.pizza7
+        "pizza8" -> Res.drawable.pizza8
+        "pizza9" -> Res.drawable.pizza9
+        else -> Res.drawable.logo
+    }
+
     Card(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
@@ -25,7 +40,7 @@ fun PizzaCard(pizza: Pizza, modifier: Modifier = Modifier, onClickPizza: () -> U
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Image(
-                painter = painterResource(pizza.imagePath),
+                painter = painterResource(imageRes),
                 contentDescription = "Logo",
                 modifier = Modifier.size(100.dp)
             )

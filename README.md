@@ -119,3 +119,48 @@ implementation("media.kamel:kamel-image:1.0.3") {
     exclude(group = "media.kamel", module = "kamel-fetcher-resources-android")
 }
 ```
+
+## Problèmes rencontrés avec la base de données et solutions
+
+### 1. **Problème de compatibilité Room sur Kotlin Multiplatform**
+**Problème** : Room n'est disponible que pour Android, ce qui empêche une implémentation directe sur Desktop et Web.
+
+**Solution** :
+- Nous avons utilisé **Room pour Android**, **Exposed + JDBC pour Desktop**, et **une implémentation WebSQLite pour WASM**.
+- Ajout de classes spécifiques pour chaque plateforme via `expect/actual` pour gérer les différences d'implémentation.
+
+---
+
+### 2. **Problème de compatibilité WebAssembly avec SQLite**
+**Problème** : WebAssembly ne supporte pas les bases de données locales de la même manière que Desktop et Android.
+
+**Solution** :
+- Utilisation de `WebSqliteDriver` pour gérer la base de données dans le navigateur.
+- Implémentation d'un DAO spécifique (`WasmOrderDao`) utilisant une liste en mémoire si la base de données n'est pas persistante.
+
+---
+
+### 3. **Problème d'incompatibilité de `MutableStateFlow` sur WebAssembly**
+**Problème** : `MutableStateFlow` n'est pas disponible en `wasmJsMain`, ce qui empêche l'utilisation des `Flow` comme sur Android et Desktop.
+
+**Solution** :
+- Remplacement de `Flow<List<Order>>` par `List<Order>` dans la couche DAO pour WASM.
+- Adaptation de l'interface DAO pour utiliser des `MutableList<Order>` en mémoire sur Web.
+
+---
+
+### 4. **Problème d'autoincrement avec SQLite sur Desktop**
+**Problème** : Sur SQLite (via JDBC), l'auto-incrémentation ne fonctionnait pas comme prévu.
+
+**Solution** :
+- Utilisation explicite de `INTEGER PRIMARY KEY AUTOINCREMENT` dans la définition de la table.
+- Vérification que l'ID est bien récupéré après chaque insertion.
+
+---
+
+### 5. **Problème de compatibilité entre Android et Desktop lors du partage de classes sérialisables**
+**Problème** : Les classes `Order`, `Pizza`, et `CartItem` étaient sérialisables (`@Serializable`), mais Room sur Android n'accepte pas directement des listes dans les entités.
+
+**Solution** :
+- Ajout d'un **TypeConverter** pour convertir les listes en JSON et vice-versa.
+- Utilisation de `@TypeConverters(OrderConverters::class)` sur l'entité `Order`.

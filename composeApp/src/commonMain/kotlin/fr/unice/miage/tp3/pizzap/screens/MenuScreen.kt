@@ -11,20 +11,25 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import fr.unice.miage.tp3.pizzap.components.CartState
+import fr.unice.miage.tp3.pizzap.components.CartTempItem
 import fr.unice.miage.tp3.pizzap.components.PizzaCard
-import fr.unice.miage.tp3.pizzap.datasource.DataSource
+import fr.unice.miage.tp3.pizzap.datasource.DataSourceFactory
 
 
 object MenuScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.current
-        val pizzas = DataSource().loadPizzas()
+        val dataSource = remember { DataSourceFactory.getInstance() }
+        val pizzas = dataSource.getPizzas()
+        val extraCheese = remember { mutableStateOf(0f) }
 
 
         Scaffold(
@@ -45,9 +50,12 @@ object MenuScreen : Screen {
                         pizza = pizza,
                         modifier = Modifier.padding(16.dp),
                         onClickPizza = {
-                            navigator?.push(PizzaScreen(pizza, onAddToCart = { CartState.addToCart(pizza) }))
+                            navigator?.push(PizzaScreen(pizza, onAddToCart = { CartState.addToCart(pizza, extraCheese)}))
                         },
-                        onAddToCart = { CartState.addToCart(pizza) }
+                        onAddToCart = { CartState.addToCart(
+                            pizza,
+                            extraCheese
+                        ) }
                     )
                 }
             }

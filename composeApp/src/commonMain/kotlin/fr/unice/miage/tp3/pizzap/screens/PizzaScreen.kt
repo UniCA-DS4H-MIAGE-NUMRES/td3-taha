@@ -29,12 +29,26 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import fr.unice.miage.tp3.pizzap.model.Pizza
 import org.jetbrains.compose.resources.painterResource
+import pizzapp.composeapp.generated.resources.Res
+import pizzapp.composeapp.generated.resources.*
 
 data class PizzaScreen(val pizza: Pizza, val onAddToCart: () -> Unit) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.current
         val extraCheese = remember { mutableStateOf(0f) }
+        val imageRes = when (pizza.imagePath) {
+            "pizza1" -> Res.drawable.pizza1
+            "pizza2" -> Res.drawable.pizza2
+            "pizza3" -> Res.drawable.pizza3
+            "pizza4" -> Res.drawable.pizza4
+            "pizza5" -> Res.drawable.pizza5
+            "pizza6" -> Res.drawable.pizza6
+            "pizza7" -> Res.drawable.pizza7
+            "pizza8" -> Res.drawable.pizza8
+            "pizza9" -> Res.drawable.pizza9
+            else -> Res.drawable.logo
+        }
 
         Scaffold(
             topBar = {
@@ -62,7 +76,7 @@ data class PizzaScreen(val pizza: Pizza, val onAddToCart: () -> Unit) : Screen {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(pizza.imagePath),
+                        painter = painterResource(imageRes),
                         contentDescription = "Logo",
                         modifier = Modifier.size(100.dp)
                     )
@@ -81,7 +95,7 @@ data class PizzaScreen(val pizza: Pizza, val onAddToCart: () -> Unit) : Screen {
                 }
 
                 Button(
-                    onClick = onAddToCart,
+                    onClick = { onAddToCart },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
