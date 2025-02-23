@@ -95,7 +95,7 @@ data class PizzaScreen(val pizza: Pizza, val onAddToCart: () -> Unit) : Screen {
                 }
 
                 Button(
-                    onClick = { onAddToCart },
+                    onClick = { onAddToCart() },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)

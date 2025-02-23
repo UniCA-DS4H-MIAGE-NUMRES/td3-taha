@@ -1,9 +1,13 @@
 package fr.unice.miage.tp3.pizzap.components
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
 import fr.unice.miage.tp3.pizzap.model.CartItem
 import fr.unice.miage.tp3.pizzap.model.Pizza
+
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+
 
 data class CartTempItem(
     var pizza: Pizza,
@@ -11,16 +15,20 @@ data class CartTempItem(
 )
 
 object CartState {
-    private val _cart = mutableStateListOf<CartTempItem>()
-    val cart: List<CartTempItem> get() = _cart
+    private val _cart = MutableStateFlow<List<CartTempItem>>(emptyList())
+    val cart: StateFlow<List<CartTempItem>> get() = _cart
 
     fun addToCart(pizza: Pizza, extraCheese: MutableState<Float>) {
         val item = CartTempItem(pizza, extraCheese.value)
-        _cart.add(item)
+        _cart.value = _cart.value + item
+        // Log the added item and the current state of the cart
+        println("CartState: Added item: $item")
+        println("CartState: Current cart items: ${_cart.value}")
     }
 
     fun clearCart() {
-        _cart.clear()
+        _cart.value = emptyList()
+        println("CartState: Cart cleared")
     }
 
     fun CartTempItem.toCartItem(): CartItem {
@@ -31,7 +39,7 @@ object CartState {
         )
     }
 
-    fun toCartItemList(): List<CartItem> {
-        return _cart.map { it.toCartItem() }
+    fun toCartItemList() = cart.map { list ->
+        list.map { it.toCartItem() }
     }
 }

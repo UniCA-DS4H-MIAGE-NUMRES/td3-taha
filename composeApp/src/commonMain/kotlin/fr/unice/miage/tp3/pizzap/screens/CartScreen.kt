@@ -14,6 +14,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,11 +42,13 @@ object CartScreen : Screen {
         val coroutineScope = rememberCoroutineScope()
         val orderRepository = remember { DataSourceFactory.getOrderRepository() }
 
-        val cartItems = CartState.toCartItemList()
+        // Collect the flow of CartItem lists; initial value is an empty list
+        val cartItems by CartState.toCartItemList().collectAsState(initial = emptyList())
 
+        // Derive the total price from the collected cart items
         val totalPrice by derivedStateOf {
-            CartState.cart.sumOf { item ->
-                (item.pizza.price) + (item.cheese * 0.1)
+            cartItems.sumOf { item ->
+                item.pizza.price + (item.cheese * 0.1)
             }
         }
 
@@ -62,28 +65,37 @@ object CartScreen : Screen {
             }
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues)) {
-                Text(text = "Votre commande", style = MaterialTheme.typography.h1)
-                CartState.cart.forEach { cartItem ->
-                    Text(text = "${cartItem.pizza.name} - ${cartItem.pizza.price}€", style = MaterialTheme.typography.body1)
+                Text(text = "Votre commande", style = MaterialTheme.typography.h3)
+                cartItems.forEach { cartItem ->
+                    Text(
+                        text = "${cartItem.pizza.name} - ${cartItem.pizza.price}€",
+                        style = MaterialTheme.typography.body1
+                    )
                 }
                 Text(text = "Total: $totalPrice€", style = MaterialTheme.typography.h4)
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = {
-                         coroutineScope.launch {
+                        coroutineScope.launch {
+                            // Log the current cart items before creating the order
+                            println("CartScreen: Validating cart. Cart items: $cartItems")
+
                             val order = Order(
                                 0,
                                 getCurrentDate(),
                                 cartItems,
                                 totalPrice
                             )
+                            CartState.clearCart()
+                            // Log the order details
+                            println("CartScreen: Persisting order: $order")
                             orderRepository.addOrder(order)
                             navigator?.pop()
-                        }                    },
-                    modifier = Modifier
-                        .padding(16.dp)
+                        }
+                    },
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(text = "Add to Cart")
+                    Text(text = "Valider la commande")
                 }
             }
         }

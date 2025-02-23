@@ -1,11 +1,11 @@
 package fr.unice.miage.tp3.pizzap.database
 
-import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import fr.unice.miage.tp3.pizzap.dao.OrderDaoDesktop
+import fr.unice.miage.tp3.pizzap.datasource.DataSource
 
-class DatabaseDriverFactory {
-    fun createDriver(): SqlDriver {
-        Database.connect("jdbc:sqlite:pizza_database.db", driver = "org.sqlite.JDBC")
-        return JdbcSqliteDriver("jdbc:sqlite:pizza_database.db")
+object DataSourceFactoryDesktop {
+    fun create(): DataSource {
+        val orderDao = OrderDaoDesktop()
+        return DataSource(orderDao)
     }
 }

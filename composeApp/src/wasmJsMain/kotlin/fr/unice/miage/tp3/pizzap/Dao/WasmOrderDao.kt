@@ -3,24 +3,28 @@ package fr.unice.miage.tp3.pizzap.Dao
 import fr.unice.miage.tp3.pizzap.dao.OrderDao
 import fr.unice.miage.tp3.pizzap.model.Order
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+
 
 class WasmOrderDao : OrderDao {
-    private val orders = mutableListOf<Order>()
-    private val ordersFlow = mutableListOf<Order>()
+    private val orders = MutableStateFlow<List<Order>>(emptyList())
 
     override suspend fun insertOrder(order: Order) {
-        orders.add(order)
+        val currentOrders = orders.value.toMutableList()
+        currentOrders.add(order)
+        orders.value = currentOrders
     }
 
-    override suspend fun getOrderById(id: Int): Order? {
-        return orders.find { it.id == id }
+    override fun getAllOrders(): Flow<List<Order>> = orders
+
+    override suspend fun deleteAllOrders() {
+        orders.value = emptyList()
     }
 
-    override suspend fun getAllOrders(): Flow<List<Order>> {
-        return orders
-    }
+    override suspend fun refreshOrders() {
+        }
 
     override suspend fun deleteOrder(id: Int) {
-        orders.removeIf { it.id == id }
+        TODO("Not yet implemented")
     }
 }
